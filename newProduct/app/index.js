@@ -11,7 +11,6 @@ var plugin = function(options)
     //define the patterns using the add function
     seneca.add("area:patient,action:fecth",function(args, done)
     {
-
         console.log("-->fetch");
         //calling patient listed and get all data from database
         //since we have mongostore
@@ -39,12 +38,21 @@ var plugin = function(options)
         })
     });
 
+    // seneca.add("area:patient, action:fetch, criteria:byId", function(msg, done) 
+    // {
+    //     //get access to params args
+    //     console.log("-->fetchbyid, patient_id:" + msg.args.params.patient_id);
+    //     var patient = this.make("patient");
+    //     patient.load$(msg.patient_id, done)
+    // });
+
     seneca.add("area:patient, action:fetchbyid", function(msg, done) 
     {
         //get access to params args
         console.log("-->fetchbyid, patient_id:"+ msg.args.params.patient_id);
         var patient = this.make("patient");
-        patient.list$({id:msg.args.params.patient_id}, done)
+        console.log(patient);
+        patient.load$({id:msg.args.params.patient_id}, done)
     });
     
     seneca.add("area:patient, action: delete", function(msg, done) 
@@ -151,7 +159,9 @@ seneca
 .use(web,config)
 //enabling my mongoDb
 .use(mongo_store, {
-    uri: 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.0'
+    name:"seneca",
+    host:"127.0.0.1",port:"27017"
+    // uri: 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.0'
 })
 //ready functiom
 .ready(() => {
