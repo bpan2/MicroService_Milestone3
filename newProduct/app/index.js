@@ -20,7 +20,7 @@ var plugin = function(options)
         patient.list$({}, done);
     });
 
-    seneca.add("area:patient,action:add", function(msg, doone) 
+    seneca.add("area:patient,action:add", function(msg, done) 
     {
         console.log("-->add, patient_name:"+ msg.args.body.patient_name);
 
@@ -151,7 +151,7 @@ seneca
 .use(web,config)
 //enabling my mongoDb
 .use(mongo_store, {
-    uri: 'mongodb://127.0.0.1:27017/senecatest'
+    uri: 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.0'
 })
 //ready functiom
 .ready(() => {
