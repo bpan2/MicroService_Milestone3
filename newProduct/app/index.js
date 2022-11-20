@@ -3,97 +3,71 @@
 //plugin
 var plugin = function(options) 
 {
-
-    //code for plugin
-    //get access to seneca
     var seneca = this;
 
-    //define the patterns using the add function
-    seneca.add("area:patient,action:fecth",function(args, done)
-    {
-        console.log("-->fetch");
-        //calling patient listed and get all data from database
-        //since we have mongostore
-        //seneca entity framework will fetch it from the database
+    seneca.add("area:patient, action:fetch",function(args, done){
+        console.log("-->fetch all");
         var patient = this.make("patient");
         patient.list$({}, done);
     });
 
-    seneca.add("area:patient,action:add", function(msg, done) 
-    {
-        console.log("-->add, patient_name:"+ msg.args.body.patient_name);
+    seneca.add("area:patient, action:add", function(msg, done){
+        console.log("-->add, patient_name:"+ msg.args.query.patient_name);
 
         var patient = this.make("patient")
+        patient.patient_name = msg.args.query.patient_name;
+        patient.patient_phone = msg.args.query.patient_phone;
+        patient.patient_address = msg.args.query.patient_address;
+        patient.patient_age = msg.args.query.patient_age;
+        patient.patient_gender = msg.args.query.patient_gender;
+        patient.patient_medicalrecord = msg.args.query.patient_medicalrecord;
 
-        patient.patient_name = msg.args.patient_name;
-        patient.patient_phone = msg.args.patient_phone;
-        patient.patient_address = msg.args.patient_address;
-        patient.patient_age = msg.args.patient_age;
-        patient.patient_gender = msg.args.patient_gender;
-        patient.patient_medicalrecord = msg.args.patient_medicalrecord;
-
-        //save patient inside mongodb using entity framework
         patient.save$(function(err, patient) {
             done(err, patient.data$(false));
         })
     });
 
-    // seneca.add("area:patient, action:fetch, criteria:byId", function(msg, done) 
-    // {
-    //     //get access to params args
-    //     console.log("-->fetchbyid, patient_id:" + msg.args.params.patient_id);
-    //     var patient = this.make("patient");
-    //     patient.load$(msg.patient_id, done)
-    // });
-
-    seneca.add("area:patient, action:fetchbyid", function(msg, done) 
-    {
-        //get access to params args
+    seneca.add("area:patient, action:fetchbyid", function(msg, done){
         console.log("-->fetchbyid, patient_id:"+ msg.args.params.patient_id);
         var patient = this.make("patient");
-        console.log(patient);
         patient.load$({id:msg.args.params.patient_id}, done)
     });
     
-    seneca.add("area:patient, action: delete", function(msg, done) 
-    {
-        console.log("-->delete, patient_id:"+ msg.args.params.patient_id);
+    seneca.add("area:patient, action: delete", function(msg, done){
         var patient = this.make("patient");
-        patient.remove$(msg.args.params.patient_id, function(err){
+        patient.remove$({id:msg.args.params.patient_id}, function(err){
             done(err, null)
         })
     });
 
-    seneca.add("area: patient, action: edit", function(msg, dome)
+    seneca.add("area: patient, action: edit", function(msg, done)
     {
         console.log("-->edit, patient_id:"+ msg.args.params.patient_id);
-        //create an instance of our patients
-        var patient = thos.make("patient");
+        console.log("-->edit, before editing, the query: ");
+        console.log("%j", msg.args.query);
 
-        patient.list$({id: msg.args.params.patient_id}, function(err, result){
-            console.log("-->-->: patient.list$ id:" + msg.args.params.patient_id);
-            console.log("-->-->: patient.data$");
-            console.log("-->-->: result[0]" + result[0].patient_id);
-            //if not found return error
-            var patient = result[0]; // first element
-            patient.data$(
+        var patient = this.make("patient");
+        patient.list$({id: msg.args.params.patient_id}, function(err, result){          
+            var pa = result[0];
+            console.log("-->edit, before editing, patient: " + pa);
+            pa.data$(
                 {
-                    name:msg.args.body.patient_name,
-                    phone:msg.args.body.patient_phone,
-                    address: msg.args.body.patient_address,
-                    age:msg.args.body.patient_age,
-                    gender:msg.args.body.patient_gender,
-                    medicalrecord:msg.args.body.patient_medicalrecord,
+                patient_name: msg.args.query.patient_name,
+                patient_phone: msg.args.query.patient_phone,
+                patient_address: msg.args.query.patient_address,
+                patient_age: msg.args.query.patient_age,
+                patient_gender: msg.args.query.patient_gender,
+                patient_medicalrecord: msg.args.query.patient_medicalrecord
                 }
             );
-            console.log("-->-->: patient.saves$");
-            patient.saves$(function(err, done){
-                console.log("-->-->: patient.data$, patient:"+ patient);
-                dome(err, result.data$(false))
+            
+            console.log("prior to save$, pa: " + pa);
+
+            pa.save$(function(err, pa){
+                done(err, pa.data$(false))
             })
         })
-    });
-
+    }); 
 }
 //export plugin
 module.exports = plugin;
@@ -124,9 +98,7 @@ var config = {
         prefix : '/patient',
         pin: "area:patient,action:*",
         map:{
-            fetch: {
-                GET: true
-            },
+            fetch: {GET: true},
             add: {POST: true},
             fetchbyid: {GET: true, suffix: '/:patient_id'},
             delete : {DELETE: true, suffix: '/:patient_id'},
