@@ -43,12 +43,14 @@ var plugin = function(options)
     seneca.add("area: patient, action: edit", function(msg, done)
     {
         console.log("-->edit, patient_id:"+ msg.args.params.patient_id);
-        console.log("-->edit, before editing, the query: ");
-        console.log("%j", msg.args.query);
 
         var patient = this.make("patient");
         patient.list$({id: msg.args.params.patient_id}, function(err, result){          
             var pa = result[0];
+
+            console.log("-->edit, before editing, the query: ");
+            console.log("%j", msg.args.query);
+    
             console.log("-->edit, before editing, patient: " + pa);
             pa.data$(
                 {
@@ -56,11 +58,10 @@ var plugin = function(options)
                 patient_phone: msg.args.query.patient_phone,
                 patient_address: msg.args.query.patient_address,
                 patient_age: msg.args.query.patient_age,
-                patient_gender: msg.args.query.patient_gender,
-                patient_medicalrecord: msg.args.query.patient_medicalrecord
+                patient_gender: msg.args.query.patient_gender,            
+                patient_medicalrecord: msg.args.body.patient_medicalrecord
                 }
             );
-            
             console.log("prior to save$, pa: " + pa);
 
             pa.save$(function(err, pa){
