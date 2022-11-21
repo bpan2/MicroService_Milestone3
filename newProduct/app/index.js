@@ -6,13 +6,13 @@ var plugin = function(options)
     var seneca = this;
 
     seneca.add("area:patient, action:fetch",function(args, done){
-        console.log("-->fetch all");
+        console.log("-->retrieve all patient records");
         var patient = this.make("patient");
         patient.list$({}, done);
     });
 
     seneca.add("area:patient, action:add", function(msg, done){
-        console.log("-->add, patient_name:"+ msg.args.query.patient_name);
+        console.log("-->add a patient, the patient's name: "+ msg.args.query.patient_name);
 
         var patient = this.make("patient")
         patient.patient_name = msg.args.query.patient_name;
@@ -20,7 +20,7 @@ var plugin = function(options)
         patient.patient_address = msg.args.query.patient_address;
         patient.patient_age = msg.args.query.patient_age;
         patient.patient_gender = msg.args.query.patient_gender;
-        patient.patient_medicalrecord = msg.args.query.patient_medicalrecord;
+        patient.patient_medicalrecord = msg.args.body.patient_medicalrecord;
 
         patient.save$(function(err, patient) {
             done(err, patient.data$(false));
@@ -28,30 +28,29 @@ var plugin = function(options)
     });
 
     seneca.add("area:patient, action:fetchbyid", function(msg, done){
-        console.log("-->fetchbyid, patient_id:"+ msg.args.params.patient_id);
+        console.log("-->fetchbyid, patient_id: "+ msg.args.params.patient_id);
         var patient = this.make("patient");
         patient.load$({id:msg.args.params.patient_id}, done)
     });
     
     seneca.add("area:patient, action: delete", function(msg, done){
+        console.log("-->delete a single patient record, the patient id: "+ msg.args.params.patient_id);
         var patient = this.make("patient");
         patient.remove$({id:msg.args.params.patient_id}, function(err){
             done(err, null)
         })
     });
 
-    seneca.add("area: patient, action: edit", function(msg, done)
-    {
-        console.log("-->edit, patient_id:"+ msg.args.params.patient_id);
+    //Todo: Modify the updating functionality so that the edit action can handle both replacing the existing data and appending to the existing data.
+    //
+    //Note: besides editing, this "edit" functionality can only update those fields by replacing what already in our dbs.
+    //It can not add upon, i.e. append, to what already exists. 
+    seneca.add("area: patient, action: edit", function(msg, done){
+        console.log("-->edit & update a patient's record, the patient's id: "+ msg.args.params.patient_id);
 
         var patient = this.make("patient");
         patient.list$({id: msg.args.params.patient_id}, function(err, result){          
             var pa = result[0];
-
-            console.log("-->edit, before editing, the query: ");
-            console.log("%j", msg.args.query);
-    
-            console.log("-->edit, before editing, patient: " + pa);
             pa.data$(
                 {
                 patient_name: msg.args.query.patient_name,
@@ -62,8 +61,7 @@ var plugin = function(options)
                 patient_medicalrecord: msg.args.body.patient_medicalrecord
                 }
             );
-            console.log("prior to save$, pa: " + pa);
-
+   
             pa.save$(function(err, pa){
                 done(err, pa.data$(false))
             })
@@ -93,31 +91,31 @@ var app = express();
 
 //integrate binding between express and seneca. Configuration json
 var config = {
-    //define the routes
+    //define the routes,
     //mapping for the routes
     routes:{
         prefix : '/patient',
         pin: "area:patient,action:*",
         map:{
             fetch: {GET: true},
-            add: {POST: true},
             fetchbyid: {GET: true, suffix: '/:patient_id'},
-            delete : {DELETE: true, suffix: '/:patient_id'},
-            edit: {PUT: true, suffix: '/:patient_id'}
+            add: {POST: true},
+            edit: {PUT: true, suffix: '/:patient_id'},
+            delete : {DELETE: true, suffix: '/:patient_id'}
         }
     },
 
-    //define the adapter.
+    //define the adapter,
     //integrate seneca wih the adapter
     //defined in the configuration
     adapter: require('seneca-web-adapter-express'),
 
     //to have a control on body parsing seperate from seneca
     //independent parsing through the express framework
-    //web adpater wont be parsing the body, instead is express is parsing th body. Set as false
+    //web adpater won't be parsing the body, instead is express is parsing th body. Set as false
     options: {parseBody: false},
-    context: app
 
+    context: app
 };
 
 //additional express middleware to parse json formated using
@@ -134,9 +132,7 @@ seneca
 .use(mongo_store, {
     name:"seneca",
     host:"127.0.0.1",port:"27017"
-    // uri: 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.0'
 })
-//ready functiom
 .ready(() => {
     //starting web pluign
     var server = seneca.export('web/context')()
@@ -148,7 +144,7 @@ seneca
     console.log("https://localhost:3000/patient/fetch");
     console.log("https://localhost:3000/patient/fetchbyid/123");
     console.log("https://localhost:3000/patient/add");
-    console.log("https://localhost:3000/patient/delete");
     console.log("https://localhost:3000/patient/edit/123");
+    console.log("https://localhost:3000/patient/delete/123");
 })
 
