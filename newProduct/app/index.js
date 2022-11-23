@@ -141,10 +141,10 @@ seneca
     })
     console.log("Server listening on: //localhost:"+3000);
     console.log("--- Actions -----------");
-    console.log("https://localhost:3000/patient/fetch");
-    console.log("https://localhost:3000/patient/fetchbyid/123");
-    console.log("https://localhost:3000/patient/add");
-    console.log("https://localhost:3000/patient/edit/123");
-    console.log("https://localhost:3000/patient/delete/123");
+    console.log("http://localhost:3000/patient/fetch");
+    console.log("http://localhost:3000/patient/fetchbyid/123");
+    console.log("http://localhost:3000/patient/add");
+    console.log("http://localhost:3000/patient/edit/123");
+    console.log("http://localhost:3000/patient/delete/123");
 })
 
